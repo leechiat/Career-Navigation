@@ -1,4 +1,5 @@
 {
+  "id": "/AsyncAscent/",
   "name": "AsyncAscent: Strategic Visibility & Autonomy Trainer",
   "short_name": "AsyncAscent",
   "description": "Daily 5-15m executive visibility, scope protection, and async political simulator.",
@@ -19,12 +20,6 @@
       "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "./icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]
