@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>AsyncAscent | Strategic Visibility & Autonomy</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-hover: #334155;
+      --border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-indigo: #818cf8;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding-bottom: 90px;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px;
+    }
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: -0.02em;
+    }
+    .brand-badge {
+      background: linear-gradient(135deg, var(--accent), var(--accent-indigo));
+      color: #0f172a;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+    .install-btn {
+      display: none;
+      background: var(--accent);
+      color: #0f172a;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .track-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--surface);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .track-btn {
+      background: transparent;
+      color: var(--text-muted);
+      border: none;
+      padding: 8px 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .track-btn.active {
+      background: var(--bg);
+      color: var(--accent);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .hud-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .hud-card {
+      background: var(--surface);
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .hud-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .hud-bar-bg {
+      height: 6px;
+      background: #0f172a;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .hud-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+    main { padding: 16px; }
+    .tab-section { display: none; }
+    .tab-section.active { display: block; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .pill {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 99px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .pill-scope { background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.4); }
+    .pill-async { background: rgba(56, 189, 248, 0.15); color: var(--accent); border: 1px solid rgba(56, 189, 248, 0.4); }
+    .pill-time { background: rgba(148, 163, 184, 0.15); color: var(--text-muted); }
+
+    h2 { font-size: 1.15rem; margin-bottom: 8px; color: var(--text); }
+    h3 { font-size: 0.98rem; margin-bottom: 6px; color: var(--accent); }
+    p { font-size: 0.92rem; color: #cbd5e1; margin-bottom: 12px; }
+
+    .context-box {
+      background: rgba(15, 23, 42, 0.65);
+      border-left: 3px solid var(--accent-indigo);
+      padding: 12px;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.88rem;
+      margin-bottom: 16px;
+    }
+
+    .option-btn {
+      width: 100%;
+      text-align: left;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 14px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.1s;
+    }
+    .option-btn:hover, .option-btn:focus { border-color: var(--accent); }
+    .option-btn.selected { border: 2px solid var(--accent); background: rgba(56, 189, 248, 0.08); }
+    .option-title { font-weight: 700; font-size: 0.92rem; margin-bottom: 4px; color: var(--text); display: block; }
+    .option-desc { font-size: 0.84rem; color: var(--text-muted); }
+
+    .feedback-panel {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 12px;
+      background: #0f172a;
+      border: 1px solid var(--accent);
+      display: none;
+    }
+    .delta-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .delta {
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+    .delta.pos { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .delta.neg { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .delta.neu { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+
+    .script-box {
+      background: #1e293b;
+      border: 1px dashed var(--accent-indigo);
+      padding: 12px;
+      border-radius: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.82rem;
+      color: #e2e8f0;
+      margin-top: 10px;
+      white-space: pre-wrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-indigo));
+      color: #0f172a;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+    }
+    .btn-secondary {
+      background: var(--surface-hover);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+
+    .nav-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .slider-group { margin-bottom: 14px; }
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+    .checkbox-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: #0f172a;
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+    .checkbox-row input { margin-top: 4px; accent-color: var(--success); transform: scale(1.15); }
+
+    select, textarea, input[type="text"] {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+      font-family: inherit;
+    }
+    textarea { min-height: 95px; resize: vertical; }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 23, 42, 0.96);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 6px 14px;
+      z-index: 100;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .nav-item {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      flex: 1;
+    }
+    .nav-item.active { color: var(--accent); }
+    .nav-icon { font-size: 1.2rem; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="top-row">
+      <div class="brand">
+        <span>🧭 AsyncAscent</span>
+        <span class="brand-badge" id="streakBadge">🔥 Day 1</span>
+      </div>
+      <button class="install-btn" id="installBtn">📲 Install App</button>
+    </div>
+
+    <div class="track-selector" role="tablist" aria-label="Career Track Mode">
+      <button class="track-btn active" id="trackIC" onclick="setTrack('IC')">Path A: Staff / Principal IC</button>
+      <button class="track-btn" id="trackMGR" onclick="setTrack('MGR')">Path B: People Manager</button>
+    </div>
+
+    <div class="hud-grid">
+      <div class="hud-card">
+        <div class="hud-label"><span>Exec Visibility</span><strong id="valVis">45%</strong></div>
+        <div class="hud-bar-bg"><div class="hud-bar-fill" id="barVis" style="width:45%; background:var(--accent);"></div></div>
+      </div>
+      <div class="hud-card">
+        <div class="hud-label"><span>Political Capital</span><strong id="valPol">50%</strong></div>
+        <div class="hud-bar-bg"><div class="hud-bar-fill" id="barPol" style="width:50%; background:var(--accent-indigo);"></div></div>
+      </div>
+      <div class="hud-card">
+        <div class="hud-label"><span>Autonomy / Life</span><strong id="valAut">80%</strong></div>
+        <div class="hud-bar-bg"><div class="hud-bar-fill" id="barAut" style="width:80%; background:var(--success);"></div></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- TAB 1: DAILY SCENARIO DOJO -->
+    <section id="tab-dojo" class="tab-section active">
+      <div class="nav-row">
+        <span style="font-size:0.82rem; color:var(--text-muted);" id="scenarioCounter">Scenario 1 of 4</span>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-secondary" onclick="prevScenario()">◀ Prev</button>
+          <button class="btn-secondary" onclick="nextScenario()">Next ▶</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="pill-row">
+          <span class="pill" id="scCategory">Category</span>
+          <span class="pill pill-time" id="scTime">⏱ 5 Min Drill</span>
+        </div>
+        <h2 id="scTitle">Scenario Title</h2>
+        <p id="scSetup">Scenario description...</p>
+        <div class="context-box" id="scTrackNote"></div>
+
+        <div id="optionsContainer"></div>
+
+        <div class="feedback-panel" id="feedbackPanel">
+          <div class="delta-badges" id="feedbackDeltas"></div>
+          <h3 id="feedbackTitle">Strategic Analysis</h3>
+          <p id="feedbackBody"></p>
+          <p style="font-size:0.84rem; color:var(--warning); margin-bottom:6px;"><strong>⚖️ Autonomy & Lifestyle Trade-off:</strong> <span id="feedbackTradeoff"></span></p>
+          <div class="script-box" id="feedbackScript"></div>
+          <button class="btn-secondary" style="margin-top:10px; width:100%;" onclick="copyText('feedbackScript')">📋 Copy Async Response Template</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: STRATEGIC TRADE-OFF SIMULATOR -->
+    <section id="tab-sim" class="tab-section">
+      <div class="card">
+        <div class="pill-row">
+          <span class="pill pill-scope">ROI & Lifestyle Cost Engine</span>
+        </div>
+        <h2>Initiative Trade-Off Simulator</h2>
+        <p>Before you pitch a high-visibility idea (like an SVP Analytics Dashboard or AI workflow) or accept a "quick favor," simulate the 6-month impact on your personal schedule flexibility.</p>
+
+        <label style="font-size:0.82rem; color:var(--text-muted);">Preset or Custom Initiative</label>
+        <select id="simPreset" onchange="loadPreset()">
+          <option value="svp">Pitch SVP Analytics Dashboard (Your Example)</option>
+          <option value="ai">Build Custom AI Agent for Cross-Timezone Team</option>
+          <option value="fire">Accept Urgent Ad-Hoc Data Firefighting Request</option>
+        </select>
+
+        <div class="slider-group">
+          <div class="slider-label"><span>Skip-Level (VP/SVP) Exposure</span><span id="lblExp">85 / 100</span></div>
+          <input type="range" id="rngExp" min="10" max="100" value="85" oninput="runSim()" />
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label"><span>Raw Weekly Maintenance / Firefighting Tax</span><span id="lblMaint">6 hrs/wk</span></div>
+          <input type="range" id="rngMaint" min="0" max="15" value="6" oninput="runSim()" />
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label"><span>Live Off-Hours Meeting Requirement</span><span id="lblSync">3 calls/mo</span></div>
+          <input type="range" id="rngSync" min="0" max="12" value="3" oninput="runSim()" />
+        </div>
+
+        <h3 style="margin-top:14px; margin-bottom:8px;">🛡️ Architectural Safeguards (Toggle to Compare)</h3>
+        <label class="checkbox-row">
+          <input type="checkbox" id="chkSelfServe" onchange="runSim()" />
+          <div>
+            <strong>1. Build Self-Service / Automated Pipeline</strong><br/>
+            <span style="color:var(--text-muted); font-size:0.78rem;">Invest +4h upfront so data refreshes automatically without manual intervention.</span>
+          </div>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="chkHandoff" onchange="runSim()" />
+          <div>
+            <strong>2. "Architect Now, Delegate Operations" Charter Clause</strong><br/>
+            <span style="color:var(--text-muted); font-size:0.78rem;">Explicitly state in the pitch that V1 is an architectural PoC and ongoing operations transfer to a local-timezone analyst after 30 days.</span>
+          </div>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="chkAsyncReadout" onchange="runSim()" />
+          <div>
+            <strong>3. Async 3-Min Executive Video + Annotated Memo</strong><br/>
+            <span style="color:var(--text-muted); font-size:0.78rem;">Replace live midnight status calls with a high-signal recorded Loom/Teams clip sent 4 hours before HQ wakes up.</span>
+          </div>
+        </label>
+
+        <div class="context-box" style="margin-top:16px;" id="simResultBox"></div>
+      </div>
+    </section>
+
+    <!-- TAB 3: CUSTOM DILEMMA & AI PROMPT BUILDER -->
+    <section id="tab-builder" class="tab-section">
+      <div class="card">
+        <div class="pill-row">
+          <span class="pill pill-async">Live Workplace Co-Pilot</span>
+        </div>
+        <h2>Custom Dilemma & Prompt Refactoring Studio</h2>
+        <p>Facing a real political situation today? Structure the variables below to generate a high-leverage AI coaching prompt AND an instant executive-ready message.</p>
+
+        <label style="font-size:0.8rem; color:var(--text-muted);">1. Primary Workplace Dynamic</label>
+        <select id="bldType">
+          <option value="Scope Creep from Competence">Scope Creep from Competence (Dumped with extra work)</option>
+          <option value="Async Decision Exclusion">Async Decision Exclusion (Left out of HQ timezone calls)</option>
+          <option value="Credit Appropriation">Invisible Engine / Credit Taken by Louder Peer</option>
+          <option value="Pitching AI / Analytics Without Maintenance Trap">Pitching High-Visibility Idea Without Owning Maintenance</option>
+        </select>
+
+        <label style="font-size:0.8rem; color:var(--text-muted);">2. Who is the Stakeholder?</label>
+        <select id="bldStakeholder">
+          <option value="Skip-Level VP / SVP in HQ Timezone">Skip-Level VP / SVP in HQ Timezone</option>
+          <option value="Direct Manager">Direct Manager</option>
+          <option value="Cross-Functional Peer / Product Manager">Cross-Functional Peer / Product Manager</option>
+        </select>
+
+        <label style="font-size:0.8rem; color:var(--text-muted);">3. Describe What Happened (Even 1-2 rough sentences)</label>
+        <textarea id="bldContext" placeholder="e.g., The US team decided in a 2 AM meeting to change the KPI methodology for my AI model without consulting me, and now expects me to rebuild it by Friday..."></textarea>
+
+        <label style="font-size:0.8rem; color:var(--text-muted);">4. Your Non-Negotiable Autonomy Boundary</label>
+        <input type="text" id="bldBoundary" value="No recurring late-night calls; protect my personal blocks for workouts, classes, and travel." />
+
+        <button class="btn-primary" onclick="generateCustomPrompt()">⚡ Generate Refactored Prompt & Async Script</button>
+
+        <div id="builderOutputWrap" style="display:none; margin-top:16px;">
+          <h3>1. Refactored Master Prompt (Paste into Gemini/LLM)</h3>
+          <div class="script-box" id="outMasterPrompt"></div>
+          <button class="btn-secondary" style="margin-top:8px; width:100%;" onclick="copyText('outMasterPrompt')">📋 Copy Master Prompt</button>
+
+          <h3 style="margin-top:16px;">2. Instant Ready-to-Send Diplomatic Script</h3>
+          <div class="script-box" id="outDirectScript"></div>
+          <button class="btn-secondary" style="margin-top:8px; width:100%;" onclick="copyText('outDirectScript')">📋 Copy Direct Script</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: PROFILE, PROGRESS & BACKUP -->
+    <section id="tab-profile" class="tab-section">
+      <div class="card">
+        <h2>Your Autonomy-First Career Ledger</h2>
+        <p>All training metrics and completed scenarios are stored locally on your device.</p>
+        <div class="context-box" id="statsSummary"></div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+          <button class="btn-secondary" onclick="exportData()">⬇ Export Backup JSON</button>
+          <button class="btn-secondary" onclick="document.getElementById('importFile').click()">⬆ Import Backup JSON</button>
+          <button class="btn-secondary" style="color:var(--danger);" onclick="resetData()">🗑 Reset Scores</button>
+          <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)" />
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab('dojo', this)">
+      <span class="nav-icon">🎯</span><span>Daily Dojo</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('sim', this)">
+      <span class="nav-icon">⚖️</span><span>ROI Simulator</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('builder', this)">
+      <span class="nav-icon">🧠</span><span>Prompt Studio</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('profile', this)">
+      <span class="nav-icon">📊</span><span>Ledger</span>
+    </button>
+  </nav>
+
+  <script>
+    const defaultState = {
+      track: 'IC',
+      vis: 45,
+      pol: 50,
+      aut: 80,
+      streak: 1,
+      lastDate: new Date().toDateString(),
+      completedIds: [],
+      currentScenarioIdx: 0
+    };
+
+    let state = JSON.parse(localStorage.getItem('asyncAscentState')) || defaultState;
+
+    function saveState() {
+      const today = new Date().toDateString();
+      if (state.lastDate !== today) {
+        state.streak += 1;
+        state.lastDate = today;
+      }
+      localStorage.setItem('asyncAscentState', JSON.stringify(state));
+      updateHUD();
+    }
+
+    const scenarios = [
+      {
+        id: 'sc1',
+        category: 'Scope Creep from Competence',
+        pillClass: 'pill-scope',
+        time: '⏱ 6 Min Drill',
+        title: 'The "You\'re So Fast With AI" Trap',
+        setup: 'You used a new AI/analytics workflow to automate a complex quarterly report in 2 hours instead of 2 weeks. A Director in the HQ timezone praises you in a group channel and says: "Since you can spin these up so effortlessly, can you take over the weekly ad-hoc data pulls for the three regional marketing teams?"',
+        icNote: 'Path A (Staff IC Lens): Staff ICs build systems and enablement; they do not become a high-speed ticket desk for routine pulls.',
+        mgrNote: 'Path B (Manager Lens): Accepting unresourced operational work without headcount or priority trade-offs sets your future team up for burnout.',
+        options: [
+          {
+            title: 'Option A: Eagerly accept to impress the Director',
+            desc: '"Happy to help! Send the requests my way and I\'ll run them through my script each week."',
+            deltas: { vis: +5, pol: +5, aut: -25 },
+            verdict: 'The Competence Penalty Trap',
+            analysis: 'You gained minor short-term goodwill, but you just converted your AI efficiency dividend into permanent, low-visibility maintenance work. Whenever the data looks odd, regional teams will ping you during your off-hours.',
+            tradeoff: 'Severe loss of autonomy. You traded away the free time your AI skill earned you, adding 4-6 hours of recurring weekly interruption.',
+            script: 'Avoid this path. Never give away efficiency gains as free recurring labor.'
+          },
+          {
+            title: 'Option B: Hard refusal based on workload',
+            desc: '"Sorry, I don\'t have bandwidth to run weekly ad-hoc pulls for three regional teams."',
+            deltas: { vis: -10, pol: -10, aut: +10 },
+            verdict: 'Protects Time, Hurts Executive Perception',
+            analysis: 'While it protects your schedule, a flat "no" in front of a Director in an S&P 500 culture can label you as "not a team player" or strictly siloed.',
+            tradeoff: 'High autonomy preserved, but political capital drops.',
+            script: 'Use Option C instead to protect your time while looking like a Principal-level multiplier.'
+          },
+          {
+            title: 'Option C: Pivot from "Doing the Work" to "Packaging the Playbook"',
+            desc: 'Offer a 1-time 15-minute async enablement template so their analysts can self-serve, while keeping your focus on high-impact strategic roadmap items.',
+            deltas: { vis: +20, pol: +15, aut: +10 },
+            verdict: 'Optimal Principal-Level Move',
+            analysis: 'You reframe yourself from an "operator" to an "architect/force multiplier." The Director gets the outcome they want, regional analysts upskill, and you own zero weekly maintenance.',
+            tradeoff: 'Costs 45 minutes once to document the prompt/template; saves 200+ hours a year of schedule flexibility.',
+            script: 'Hi [Director], glad the new AI workflow hit the mark! To make sure the regional teams get instant turnaround in their own timezone without waiting on my queue, I can package my prompt/script into a self-serve playbook + a 5-min walkthrough video by Thursday. That way their analysts can run ad-hoc pulls on demand while I stay focused on [Strategic Q4 Initiative].'
+          }
+        ]
+      },
+      {
+        id: 'sc2',
+        category: 'Async Decision Exclusion',
+        pillClass: 'pill-async',
+        time: '⏱ 7 Min Drill',
+        title: 'The 2:00 AM Architecture Pivot',
+        setup: 'You wake up and check Slack/Teams. During a live meeting at 2:00 AM your time, headquarters colleagues decided to scrap the analytics methodology you spent three weeks validating, replacing it with a flawed metric suggested by a vocal PM—simply because you weren\'t in the room to explain the edge cases.',
+        icNote: 'Path A (Staff IC Lens): Your authority rests on technical rigor. You must overturn flawed decisions asynchronously without sounding defensive.',
+        mgrNote: 'Path B (Manager Lens): You must establish a governance rule that no directional changes happen without an async RFC window for global stakeholders.',
+        options: [
+          {
+            title: 'Option A: Start attending the 2:00 AM meetings regularly',
+            desc: 'Set an alarm for 1:45 AM twice a week so nobody can make decisions behind your back.',
+            deltas: { vis: +10, pol: +5, aut: -30 },
+            verdict: 'Unsustainable Biological Tax',
+            analysis: 'Sacrificing sleep and health destroys the exact lifestyle flexibility you value. Worse, showing up exhausted at 2 AM rarely produces crisp executive presence.',
+            tradeoff: 'Destroys sleep, exercise recovery, and travel freedom.',
+            script: 'Do not use synchronous presence to fix an asynchronous governance problem.'
+          },
+          {
+            title: 'Option B: Send a long technical rebuttal in the group chat',
+            desc: 'Write 6 paragraphs explaining why the PM\'s metric is mathematically wrong.',
+            deltas: { vis: -5, pol: -15, aut: +5 },
+            verdict: 'Triggers Defensive Politics',
+            analysis: 'Publicly proving a vocal peer wrong after a decision was announced makes executives feel ambushed. They will often double down to save face.',
+            tradeoff: 'Preserves hours, but alienates stakeholders.',
+            script: 'Avoid walls of defensive text. Use the "Yes, And + Risk Quantification" memo below.'
+          },
+          {
+            title: 'Option C: Post a 1-Page "Decision Impact & Edge-Case Brief" + 24h Async Hold',
+            desc: 'Validate their goal, quantify the hidden financial/data risk of the new metric in 3 bullets, and propose a hybrid fix before HQ wakes up.',
+            deltas: { vis: +25, pol: +20, aut: +15 },
+            verdict: 'High-Leverage Async Influence',
+            analysis: 'By the time HQ logs on with their morning coffee, your crisp, data-backed brief is waiting at the top of the thread. You shift the conversation from "opinions in a room" to "documented business risk."',
+            tradeoff: 'Zero late-night calls. You shape the decision on your own clock.',
+            script: 'Team — caught up on the recording/notes from yesterday\'s sync. Love the push to simplify reporting speed. Before we lock the new metric into production, I ran a backtest against Q3 actuals and flagged one critical exposure:\n\n• Risk: Metric B over-counts churned accounts by ~18% ($X impact).\n• Fix: Keep Metric B\'s simplified UI, but point the backend query to the validated filter I built last week.\n\nI\'ve linked the 2-slide comparison here [Link]. Unless anyone flags an objection by EOD your time, I\'ll implement this hybrid patch so we get both speed and accuracy.'
+          }
+        ]
+      },
+      {
+        id: 'sc3',
+        category: 'Visibility vs. Maintenance Trade-Off',
+        pillClass: 'pill-scope',
+        time: '⏱ 8 Min Drill',
+        title: 'Pitching the SVP Analytics Dashboard',
+        setup: 'You spotted a major blind spot in how the company tracks AI adoption and operational efficiency. Pitching a live dashboard directly to the Senior VP will skyrocket your visibility—but if you aren\'t careful, you\'ll become the permanent "dashboard janitor" fixing broken data pipelines every time an upstream team changes a schema.',
+        icNote: 'Path A (Staff IC Lens): Position the pitch as a "Strategic Diagnostic & Architecture Blueprint," not a reporting tool you personally babysit.',
+        mgrNote: 'Path B (Manager Lens): Pitch the insight AND propose which operational team should own Run-the-Business maintenance once built.',
+        options: [
+          {
+            title: 'Option A: Don\'t pitch it; stay quiet to protect your free time',
+            desc: 'Keep the insight to yourself so you don\'t risk taking on extra maintenance work.',
+            deltas: { vis: -15, pol: -5, aut: +15 },
+            verdict: 'Stagnation Trap',
+            analysis: 'After a decade as an IC, staying invisible keeps your workload predictable, but guarantees you get passed over for Staff/Principal promotions or top compensation bands.',
+            tradeoff: '100% schedule comfort, 0% rank progression.',
+            script: 'Instead of hiding the idea, pitch it with a built-in exit clause (Option C).'
+          },
+          {
+            title: 'Option B: Pitch the dashboard and offer to manage it end-to-end',
+            desc: 'Set up the SVP meeting, build the dashboard, and promise weekly manual updates.',
+            deltas: { vis: +20, pol: +10, aut: -25 },
+            verdict: 'High Visibility, High Golden Handcuffs',
+            analysis: 'The SVP loves it—for 3 weeks. Then it becomes baseline expectation. When you want to take a 2-week trip or focus on a new technology, you\'re chained to maintaining the dashboard.',
+            tradeoff: 'Massive ongoing maintenance tax that erodes your flexibility.',
+            script: 'Never pitch an executive tool without defining Phase 2 ownership.'
+          },
+          {
+            title: 'Option C: Pitch as a "30-Day Strategic Pilot" with Explicit Handoff Governance',
+            desc: 'Deliver the executive insight via an async pre-read + 15m review, building in a mandatory Day-30 handoff to the BI/Ops team.',
+            deltas: { vis: +30, pol: +20, aut: +10 },
+            verdict: 'Executive Visibility Without the Janitor Tax',
+            analysis: 'Senior VPs respect engineers who think about organizational scalability. By defining "Phase 1: Architecture & Proof of Value (You)" and "Phase 2: Production Ownership (BI Ops)" on Slide 1, you claim 100% of the strategic credit and 0% of the long-term maintenance.',
+            tradeoff: 'Requires 1 focused sprint on your own schedule; preserves long-term freedom.',
+            script: 'SVP Pitch Framing (Slide 1 Footer):\n"Governance & Scale Plan: I have architected this V1 automated diagnostic to surface $X in efficiency opportunities over the next 30 days. To keep my bandwidth aligned with core R&D/AI architecture, I have documented the pipeline so [BI/Ops Team] can absorb routine monitoring starting next month."'
+          }
+        ]
+      },
+      {
+        id: 'sc4',
+        category: 'Async Decision Exclusion',
+        pillClass: 'pill-async',
+        time: '⏱ 5 Min Drill',
+        title: 'The "Silent Pre-Wire" Before Annual Roadmapping',
+        setup: 'Next week, headquarters leadership is holding a 4-hour live offsite (from 11 PM to 3 AM your time) to lock in next half\'s high-profile projects. Historically, the loudest people in that room get the best projects, while remote ICs get assigned the leftover cleanup work.',
+        icNote: 'Path A (Staff IC Lens): Shape the agenda before the meeting starts so your preferred technical project is the default anchor.',
+        mgrNote: 'Path B (Manager Lens): Pre-align with 2 key decision-makers asynchronously so they advocate for your charter inside the room.',
+        options: [
+          {
+            title: 'Option A: Wait for the meeting notes and accept whatever is assigned',
+            desc: 'Avoid politics and trust your manager to represent your interests.',
+            deltas: { vis: -15, pol: -10, aut: -10 },
+            verdict: 'Passive Assignment Risk',
+            analysis: 'Even well-meaning managers forget quiet remote ICs when 10 vocal peers are fighting for resources in a live room. You risk getting assigned unglamorous legacy maintenance.',
+            tradeoff: 'High risk of getting stuck with rigid, high-maintenance grunt work.',
+            script: 'Waiting passively is the #1 reason tenured ICs plateau.'
+          },
+          {
+            title: 'Option B: Send a 1-Page "State of the System & Top 2 High-ROI Bets" Brief 48h Prior',
+            desc: 'Send a crisp data memo + 3-minute recorded walkthrough to the VP and your manager two days before the offsite, explicitly naming the high-leverage project you should lead.',
+            deltas: { vis: +25, pol: +20, aut: +15 },
+            verdict: 'The Anchoring Effect in Action',
+            analysis: 'Executives rarely prepare deeply before planning offsites. When you hand them a polished, quantified 1-pager 48 hours early, they literally bring your document into the room and use it as the baseline agenda.',
+            tradeoff: 'Takes 1 hour during your preferred working window; eliminates the need to stay up until 3 AM.',
+            script: 'Hi [Manager & VP] — Ahead of Thursday\'s H2 planning session, I pulled the numbers on where our analytics/AI pipeline can deliver the highest ROI with the lowest operational overhead.\n\nI summarized the two highest-leverage bets in this 1-pager [Link] (plus a 3-min video overview for quick viewing). Proposal #1 cuts manual processing by 40% while running fully asynchronously. Happy to spearhead the architecture on #1 for H2.'
+          }
+        ]
+      }
+    ];
+
+    function updateHUD() {
+      state.vis = Math.max(0, Math.min(100, state.vis));
+      state.pol = Math.max(0, Math.min(100, state.pol));
+      state.aut = Math.max(0, Math.min(100, state.aut));
+
+      document.getElementById('valVis').textContent = state.vis + '%';
+      document.getElementById('barVis').style.width = state.vis + '%';
+      document.getElementById('valPol').textContent = state.pol + '%';
+      document.getElementById('barPol').style.width = state.pol + '%';
+      document.getElementById('valAut').textContent = state.aut + '%';
+      document.getElementById('barAut').style.width = state.aut + '%';
+      document.getElementById('streakBadge').textContent = '🔥 Day ' + state.streak;
+
+      document.getElementById('trackIC').classList.toggle('active', state.track === 'IC');
+      document.getElementById('trackMGR').classList.toggle('active', state.track === 'MGR');
+
+      const summary = document.getElementById('statsSummary');
+      if (summary) {
+        summary.innerHTML = `
+          <strong>Active Career Lens:</strong> ${state.track === 'IC' ? 'Path A — Staff / Principal IC' : 'Path B — People Management'}<br/>
+          <strong>Scenarios Mastered:</strong> ${state.completedIds.length} / ${scenarios.length}<br/>
+          <strong>Balance Verdict:</strong> ${
+            state.aut >= 70 && state.vis >= 60
+              ? '🌟 High-Leverage Zone: Rising executive visibility while fiercely protecting personal lifestyle autonomy.'
+              : state.aut < 55
+              ? '⚠️ Burnout Warning: Your visibility moves are costing too much personal time. Use self-service and delegation clauses.'
+              : '📈 Building Momentum: Keep converting quiet competence into documented async artifacts.'
+          }
+        `;
+      }
+    }
+
+    function setTrack(track) {
+      state.track = track;
+      saveState();
+      renderScenario();
+    }
+
+    function renderScenario() {
+      const sc = scenarios[state.currentScenarioIdx];
+      document.getElementById('scenarioCounter').textContent = `Scenario ${state.currentScenarioIdx + 1} of ${scenarios.length}`;
+      const catEl = document.getElementById('scCategory');
+      catEl.textContent = sc.category;
+      catEl.className = 'pill ' + sc.pillClass;
+      document.getElementById('scTime').textContent = sc.time;
+      document.getElementById('scTitle').textContent = sc.title;
+      document.getElementById('scSetup').textContent = sc.setup;
+      document.getElementById('scTrackNote').innerHTML = `<strong>🎯 ${state.track === 'IC' ? sc.icNote : sc.mgrNote}</strong>`;
+
+      const container = document.getElementById('optionsContainer');
+      container.innerHTML = '';
+      document.getElementById('feedbackPanel').style.display = 'none';
+
+      sc.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `<span class="option-title">${opt.title}</span><span class="option-desc">${opt.desc}</span>`;
+        btn.onclick = () => selectOption(idx, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectOption(idx, btnEl) {
+      document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+      btnEl.classList.add('selected');
+
+      const sc = scenarios[state.currentScenarioIdx];
+      const opt = sc.options[idx];
+
+      state.vis += opt.deltas.vis;
+      state.pol += opt.deltas.pol;
+      state.aut += opt.deltas.aut;
+      if (!state.completedIds.includes(sc.id)) state.completedIds.push(sc.id);
+      saveState();
+
+      const fmt = (n, label) => {
+        const cls = n > 0 ? 'pos' : n < 0 ? 'neg' : 'neu';
+        const sign = n > 0 ? '+' : '';
+        return `<span class="delta ${cls}">${label}: ${sign}${n}%</span>`;
+      };
+
+      document.getElementById('feedbackDeltas').innerHTML =
+        fmt(opt.deltas.vis, 'Visibility') +
+        fmt(opt.deltas.pol, 'Political Capital') +
+        fmt(opt.deltas.aut, 'Autonomy');
+
+      document.getElementById('feedbackTitle').textContent = opt.verdict;
+      document.getElementById('feedbackBody').textContent = opt.analysis;
+      document.getElementById('feedbackTradeoff').textContent = opt.tradeoff;
+      document.getElementById('feedbackScript').textContent = opt.script;
+      document.getElementById('feedbackPanel').style.display = 'block';
+    }
+
+    function nextScenario() {
+      state.currentScenarioIdx = (state.currentScenarioIdx + 1) % scenarios.length;
+      saveState();
+      renderScenario();
+    }
+
+    function prevScenario() {
+      state.currentScenarioIdx = (state.currentScenarioIdx - 1 + scenarios.length) % scenarios.length;
+      saveState();
+      renderScenario();
+    }
+
+    function loadPreset() {
+      const val = document.getElementById('simPreset').value;
+      if (val === 'svp') {
+        document.getElementById('rngExp').value = 85;
+        document.getElementById('rngMaint').value = 6;
+        document.getElementById('rngSync').value = 3;
+      } else if (val === 'ai') {
+        document.getElementById('rngExp').value = 75;
+        document.getElementById('rngMaint').value = 5;
+        document.getElementById('rngSync').value = 2;
+      } else {
+        document.getElementById('rngExp').value = 25;
+        document.getElementById('rngMaint').value = 8;
+        document.getElementById('rngSync').value = 5;
+      }
+      runSim();
+    }
+
+    function runSim() {
+      const exp = parseInt(document.getElementById('rngExp').value, 10);
+      let maint = parseFloat(document.getElementById('rngMaint').value);
+      let sync = parseFloat(document.getElementById('rngSync').value);
+
+      document.getElementById('lblExp').textContent = exp + ' / 100';
+      document.getElementById('lblMaint').textContent = maint + ' hrs/wk';
+      document.getElementById('lblSync').textContent = sync + ' calls/mo';
+
+      const selfServe = document.getElementById('chkSelfServe').checked;
+      const handoff = document.getElementById('chkHandoff').checked;
+      const asyncReadout = document.getElementById('chkAsyncReadout').checked;
+
+      let effectiveMaint = maint;
+      if (selfServe) effectiveMaint *= 0.45;
+      if (handoff) effectiveMaint *= 0.25;
+
+      let effectiveSync = sync;
+      if (asyncReadout) effectiveSync *= 0.2;
+
+      const sixMonthHours = Math.round(effectiveMaint * 26 + effectiveSync * 6 * 1.5);
+      const roiRatio = (exp / Math.max(1, effectiveMaint + effectiveSync)).toFixed(1);
+
+      let verdictColor = 'var(--success)';
+      let verdictText = 'High-Leverage Move (Safe for Autonomy)';
+      if (sixMonthHours > 110) {
+        verdictColor = 'var(--danger)';
+        verdictText = 'High Trap Risk! Will erode workout/hobby/travel freedom.';
+      } else if (sixMonthHours > 55) {
+        verdictColor = 'var(--warning)';
+        verdictText = 'Moderate Maintenance Tax — Add Handoff Clause.';
+      }
+
+      document.getElementById('simResultBox').innerHTML = `
+        <div style="font-size:0.95rem; font-weight:700; color:${verdictColor}; margin-bottom:6px;">${verdictText}</div>
+        • <strong>6-Month Lifestyle & Maintenance Tax:</strong> ~${sixMonthHours} hours total (${effectiveMaint.toFixed(1)} hrs/wk)<br/>
+        • <strong>Visibility-to-Effort Leverage Score:</strong> ${roiRatio}x<br/>
+        • <strong>Tactical Advice:</strong> ${
+          !handoff
+            ? 'Check "Architect Now, Delegate Operations" above—notice how transferring Day-30 operations slashes your 6-month maintenance hours while keeping 100% of the SVP pitch credit.'
+            : 'With automated self-service and a Day-30 handoff clause, you capture top-tier executive visibility without becoming the permanent dashboard janitor.'
+        }
+      `;
+    }
+
+    function generateCustomPrompt() {
+      const type = document.getElementById('bldType').value;
+      const stakeholder = document.getElementById('bldStakeholder').value;
+      const context = document.getElementById('bldContext').value.trim() || 'Asked to take on unglamorous recurring work / excluded from a live timezone decision.';
+      const boundary = document.getElementById('bldBoundary').value.trim();
+      const trackLabel = state.track === 'IC' ? 'Senior/Principal Individual Contributor (Path A)' : 'People Manager / Director Track (Path B)';
+
+      const masterPrompt = `Act as an Executive Career Strategist for a 10+ year S&P 500 technical/analytics professional working remotely in an asynchronous timezone.
+My target career track is: ${trackLabel}.
+My core strength: High-quality analytics, fast AI adoption, deep independent execution.
+My non-negotiable lifestyle boundary: ${boundary}
+
+Current Workplace Dilemma (${type}) with ${stakeholder}:
+"${context}"
+
+Provide:
+1. A Political Power & Trade-Off Analysis (what is the hidden maintenance trap or visibility opportunity here?).
+2. Three response options ranked from "Low-Conflict Boundary Protection" to "High-Visibility Strategic Reframe," stating the exact pros, cons, and schedule autonomy impact of each.
+3. Two copy-pasteable asynchronous messages (Slack/Teams & Email) that position me as a strategic architect rather than a pair of hands, while protecting my timezone boundaries.`;
+
+      const directScript = `Hi [${stakeholder}],\n\nThanks for flagging this. Looking at the goal around [${context.slice(0, 55)}...], I want to make sure we solve the root architecture rather than creating a manual bottleneck across timezones.\n\nHere is what I propose:\n1. Immediate Unblock: I will put together an automated template / diagnostic brief by [Day] during my working window so the team has full visibility.\n2. Scalable Ownership: Once the framework is validated, I'll include a 5-minute async walkthrough so the local-timezone team can run ongoing iterations on demand without waiting on my hours.\n\nLet me know if any critical edge cases need to be factored in before I lock the design.`;
+
+      document.getElementById('outMasterPrompt').textContent = masterPrompt;
+      document.getElementById('outDirectScript').textContent = directScript;
+      document.getElementById('builderOutputWrap').style.display = 'block';
+    }
+
+    function copyText(elId) {
+      const text = document.getElementById(elId).textContent;
+      navigator.clipboard.writeText(text);
+      alert('Copied to clipboard!');
+    }
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'async-ascent-backup.json';
+      a.click();
+    }
+
+    function importData(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          state = JSON.parse(evt.target.result);
+          saveState();
+          renderScenario();
+          alert('Progress restored!');
+        } catch {
+          alert('Invalid backup file.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetData() {
+      if (confirm('Reset your metrics and scenario progress?')) {
+        state = { ...defaultState };
+        saveState();
+        renderScenario();
+      }
+    }
+
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'inline-block';
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installBtn.style.display = 'none';
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+
+    updateHUD();
+    renderScenario();
+    runSim();
+  </script>
+</body>
+</html>
